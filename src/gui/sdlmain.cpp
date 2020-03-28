@@ -26,6 +26,7 @@
 #include <array>
 #include <cassert>
 #include <cstdlib>
+#include <exception>
 #include <string.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -2670,6 +2671,7 @@ void Disable_OS_Scaling() {
 int main(int argc, char* argv[]) {
 	int rcode = 0; // assume good until proven otherwise
 	try {
+		// throw std::logic_error("test");
 		Disable_OS_Scaling(); //Do this early on, maybe override it through some parameter.
 
 		CommandLine com_line(argc,argv);
@@ -2843,7 +2845,12 @@ int main(int argc, char* argv[]) {
 		/* Start up main machine */
 		control->StartUp();
 		/* Shutdown everything */
+	// } catch (std::exception &e) {
+	// 	fprintf(stderr, ":: caught std exception: %s\n", e.what());
+	// 	rcode = 42;
 	} catch (char * error) {
+		fprintf(stderr, ":: caught char*: %s\n", error);
+
 		rcode = 1;
 		GFX_ShowMsg("Exit to error: %s",error);
 		fflush(NULL);
@@ -2858,10 +2865,12 @@ int main(int argc, char* argv[]) {
 #endif
 		}
 	}
+/*
 	catch (...) {
 		// just exit
 		rcode = 1;
 	}
+*/
 #if defined (WIN32)
 	sticky_keys(true); //Might not be needed if the shutdown function switches to windowed mode, but it doesn't hurt
 #endif
