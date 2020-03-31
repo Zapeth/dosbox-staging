@@ -4,30 +4,56 @@ Thank you for your interest in contributing to dosbox-staging! There are many
 ways to contribute, and we appreciate all of them. This document is a bit long,
 so here's links to the major sections:
 
-- [1 Feature requests and bug reports](#)
-- [2 Build dosbox-staging]()
-- [3 Find something to work on]()
-- [4 Contributing code]()
+- [1 Feature requests and bug reports](#feature-requests-and-bug-reports)
+- [2 Find something to work on](#find-something-to-work-on)
+- [3 Build dosbox-staging](#build-dosbox-staging)
+- [4 Contributing code](#contributing-code)
    - [4.1 Coding style](#coding-style)
-      - [4.1.1 Language]()
+      - [4.1.1 Language](#language)
       - [4.1.1 Code formatting]()
       - [4.1.1 Additional style rules]()
-   - [4.2 Submitting patches / Pull Requests]()
+   - [4.2 Submitting patches / Pull Requests](#submitting-patches-pull-requests)
       - [4.2.1 Commit messages]()
       - [4.2.2 Commit messages when you're not author of the patch]()
-- [5 Tools]()
-   - [5.1 clang-format]()
-   - [5.2 Summarize warnings]()
+- [5 Tools](#tools)
+   - [5.1 Using clang-format](#using-clang-format)
+   - [5.2 Summarize warnings](#summarize-warnings)
 
-# Feature requests, bug reports, discussion channels
+# Feature requests and bug reports
 
 TODO
 
 # Find something to work on
 
-TODO: Describe where to find backlog and features for the next release,
-ideas for contributions: documentation updates (wiki, manual), game testing,
-benchmarks, documenting DOS-related resources, helping new users, etc.
+There's plenty of tasks to work on all around, here are some ideas:
+
+- Test with your DOS games.
+- Package dosbox-staging for your OS.
+- Improve documentation (in the repo, or in the
+  [project wiki](https://github.com/dreamer/dosbox-staging/wiki)).
+- Promote the project in gaming communities :)
+- Provide translations (!)
+- Look at warning in code (build with `-Wall -Weffc++` to see the long list
+  of potential code improvements), and try to eliminate them.
+- Look through our static analysis reports, pick an issue, investigate if the
+  problem is true-positive or false-positive and if the code can be improved.
+  TODO: links to Clang, Coverity, PVS
+- Look at our groomed list of features we want implemented in the
+  [Backlog](https://github.com/dreamer/dosbox-staging/projects/3) - if the issue
+  is not assigned to anyone, then it's for the pickings! Leave a comment saying
+  that you're working on it.
+- Find next release project in our [projects list ](https://github.com/dreamer/dosbox-staging/projects)
+  and pick one of tasks in "To do" column.
+- Peruse through the list of
+  [open bug reports](https://github.com/dreamer/dosbox-staging/issues?q=is%3Aissue+is%3Aopen+label%3Abug)
+  and try to reproduce or fix them.
+
+Or just send us a Pull Request with your improvement
+(read: ["Submitting patches"](#submitting-patches-pull-requests)).
+
+If you plan to work on a new, bigger feature - then it might be good idea to
+discuss it with us early, e.g. by creating new bugtracker issue.
+
 
 # Build dosbox-staging
 
@@ -41,12 +67,12 @@ These rules apply to code in `src/` and `include/` directories.
 They do not apply to code in `src/libs/` directory (libraries in there
 have their own coding conventions).
 
-Rules outlined below apply to *new* code landing in master branch.
+Rules outlined below apply to new code landing in master branch.
 Do not do mass reformating or renaming of existing code.
 
 ### Language
 
-We use C-like C++11, which means:
+We use C-like C++11. To clarify:
 
 - Avoid designing your code in complex object-oriented style.
   This does not mean "don't use classes", it means "don't use stuff like
@@ -64,21 +90,19 @@ We use C-like C++11, which means:
 - Avoid complex template metaprogramming. Simple templates are fine.
 - Avoid complex macros. If possible, write a `constexpr` function or simple
   template instead.
-- Never write `use namespace std;`. We don't want any confusion about what
+- Never write `using namespace std;`. We don't want any confusion about what
   comes from STL and what's project-specific.
 - Before using some platform-specific API - check if SDL2 provides
   cross-platform interface for it. It probably does.
 
 ### Code Formatting
 
-For *new* code follow K&R style - see [Linux coding style] for examples and some
+For new code follow K&R style - see [Linux coding style] for examples and some
 advice on good C coding style.
 
 Following all the details of formatting style is tedious, that's why we use
-custom clang-format ruleset to make it crystal clear.
-
-TODO
-Skip to [using clang-format] section for a quick reference.
+custom clang-format ruleset to make it crystal clear, skip to
+["Using clang-format"](#using-clang-format) section to learn how.
 
 [Linux coding style]:https://www.kernel.org/doc/html/latest/process/coding-style.html
 
@@ -128,9 +152,9 @@ that does not follow them.  There are no other exceptions.
   (if known), and sign it, e.g:
   
   ```
-  git commit --amend --author="Original Author <mail-or-identifier>"
-  git commit --amend --date="15-05-2003 11:45"
-  git commit --amend --signoff
+  $ git commit --amend --author="Original Author <mail-or-identifier>"
+  $ git commit --amend --date="15-05-2003 11:45"
+  $ git commit --amend --signoff
   ```
   
 - Record the source of the patch so future programmers can find the context
@@ -142,13 +166,45 @@ that does not follow them.  There are no other exceptions.
 
 For an example of commit, that followed all of these rules, see:
 
-    git log -1 ffe3c5ab7fb5e28bae78f07ea987904f391a7cf8
+    $ git log -1 ffe3c5ab7fb5e28bae78f07ea987904f391a7cf8
 
 # Tools
 
 ## Using clang-format
 
-TODO
+It's usually distributed with the Clang compiler, and can be integrated with
+[many programming environments](https://releases.llvm.org/10.0.0/tools/clang/docs/ClangFormat.html).
+
+Outside of your editor, code can be formatted by invoking the tool directly:
+
+    $ clang-format -i file.cpp
+
+But it's better not to re-format the whole file at once - you can target
+specific line ranges (run `clang-format --help` to learn how), or use our
+helper script to format C/C++ code touched by your latest commit:
+
+    $ git commit -m "Edit some C++ code"
+    $ ./scripts/format-commit.sh
+
+Run `./scripts/format-commit.sh --help` to learn about available options.
+
+
+
+### Vim integration
+
+Download `clang-format.py` file somewhere, and make it executable:
+
+    $ curl "https://raw.githubusercontent.com/llvm/llvm-project/master/clang/tools/clang-format/clang-format.py" > ~/.vim/clang-format.py
+    $ chmod +x ~/.vim/clang-format.py
+
+Then add following lines to your `.vimrc` file:
+
+    " Integrate clang-format tool
+    map <C-K> :py3f ~/.vim/clang-format.py<cr>
+    imap <C-K> <c-o>:py3f ~/.vim/clang-format.py<cr>
+
+Read documentation inside `clang-format.py` file in case your OS is missing
+python3 support or you have.
 
 ## Summarize warnings
 
