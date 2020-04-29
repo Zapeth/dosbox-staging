@@ -99,6 +99,8 @@ jobs:
       - uses:  actions/checkout@v2
       - name:  Install packages
         shell: pwsh
+        env:
+          VCPKG_BUILD_TYPE: debug
         run: |
           vcpkg install libpng sdl2 sdl2-net opusfile
           vcpkg integrate install
@@ -121,6 +123,8 @@ jobs:
       - uses:  actions/checkout@v2
       - name:  Install packages
         shell: pwsh
+        env:
+          VCPKG_BUILD_TYPE: release
         run: |
           vcpkg install libpng sdl2 sdl2-net opusfile
           vcpkg integrate install
