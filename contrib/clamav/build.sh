@@ -16,7 +16,7 @@ set -euo pipefail
 CLAM_REPO="https://github.com/Cisco-Talos/clamav-devel.git"
 
 # Determine our local script and repository directories
-SCRIPT_DIR="$(dirname "$(readlink -f "$0"))"
+SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 pushd "$SCRIPT_DIR"
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 
@@ -41,11 +41,16 @@ if [[ -z "$release" ]]; then
 fi
 git checkout "$release"
 
-# Build and install
+# Configure
 prefix="$REPO_ROOT/local"
-flags="-DNDEBUG -O3 -mtune=native -pipe"
-./configure CFLAGS="$flags" CXXFLAGS="$flags" --with-systemdsystemunitdir=no \
-            --disable-unrar --enable-static --disable-shared --prefix="$prefix"
+flags="-DNDEBUG -O3 -mtune=native -pipe -s"
+if ! ./configure CFLAGS="$flags" CXXFLAGS="$flags" --with-systemdsystemunitdir=no \
+     --disable-unrar --enable-static --disable-shared --prefix="$prefix"; then
+	cat config.log
+	exit 1
+fi
+
+# Build and install
 make -j $(nproc || echo 4) install
 make distclean > /dev/null
 
