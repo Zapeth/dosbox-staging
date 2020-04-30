@@ -273,7 +273,7 @@ void DOS_Shell::InputCommand(char * line) {
 							strncat(mask, "*",DOS_PATHLENGTH - 1);
 						else strncat(mask, "*.*",DOS_PATHLENGTH - 1);
 					} else {
-						strcpy(mask, "*.*");
+						safe_strcpy(mask, "*.*");
 					}
 
 					RealPt save_dta=dos.dta();
@@ -413,7 +413,7 @@ bool DOS_Shell::Execute(char * name,char * args) {
 	/* Check for a full name */
 	p_fullname = Which(name);
 	if (!p_fullname) return false;
-	strcpy(fullname,p_fullname);
+	safe_strcpy(fullname,p_fullname);
 	const char* extension = strrchr(fullname,'.');
 	
 	/*always disallow files without extension from being executed. */
@@ -425,21 +425,21 @@ bool DOS_Shell::Execute(char * name,char * args) {
 		char temp_name[DOS_PATHLENGTH+4],* temp_fullname;
 		//try to add .com, .exe and .bat extensions to filename
 		
-		strcpy(temp_name,fullname);
+		safe_strcpy(temp_name,fullname);
 		strcat(temp_name,".COM");
 		temp_fullname=Which(temp_name);
 		if (temp_fullname) { extension=".com";strcpy(fullname,temp_fullname); }
 
 		else 
 		{
-			strcpy(temp_name,fullname);
+			safe_strcpy(temp_name,fullname);
 			strcat(temp_name,".EXE");
 			temp_fullname=Which(temp_name);
 		 	if (temp_fullname) { extension=".exe";strcpy(fullname,temp_fullname);}
 
 			else 
 			{
-				strcpy(temp_name,fullname);
+				safe_strcpy(temp_name,fullname);
 				strcat(temp_name,".BAT");
 				temp_fullname=Which(temp_name);
 		 		if (temp_fullname) { extension=".bat";strcpy(fullname,temp_fullname);}
