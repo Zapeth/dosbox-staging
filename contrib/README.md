@@ -12,4 +12,6 @@ itself.
   by `./configure` in the absense of `pkg-config`
 - **macos**: Files required for creating macOS App bundle
 - **linux**: Desktop file for Linux
-
+- **clamav**: Compiles the latest version of ClamAV, the leading open-
+  source antivirus scanner that can be used to scan your local dosbox
+  package, DOS games, and software.
