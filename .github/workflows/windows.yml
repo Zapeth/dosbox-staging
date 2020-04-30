@@ -169,6 +169,48 @@ jobs:
           sed -i "s|%GITHUB_REPO%|$GITHUB_REPOSITORY|"       dest/README.txt
           # Create dir for zipping
           mv dest dosbox-staging-windows-${{ env.VERSION }}
+
+      - name: Prepare VirusTotal package
+        shell: bash
+        run: |
+          set -eu
+          git clone https://github.com/VirusTotal/vt-cli.git
+          cd vt-cli
+          mkdir -p build
+          VT_VERSION="$(git describe)"
+          echo ::set-env name=VT_VERSION::$VT_VERSION
+
+      - uses: actions/cache@v1
+        id: cache-vt
+        with:
+          path: vt-cli/build
+          key: vt-cli-${{ env.VT_VERSION }}
+
+      - name: Build VirusTotal package
+        if: steps.cache-vt.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -eu
+          cd vt-cli
+          LDFLAGS="-X github.com/VirusTotal/vt-cli/cmd.Version=${{ env.VT_VERSION }}"
+          go build -ldflags "${LDFLAGS}" -o ./build/vt ./vt/main.go
+
+      - name: AV Scan
+        shell: bash
+        run: |
+          set -euo pipefail
+          BUNDLE_DIR="dosbox-staging-windows-${{ env.VERSION }}"
+          BUNDLE_TAR="${BUNDLE_DIR}.tar.gz"
+          tar -czf "${BUNDLE_TAR}" "${BUNDLE_DIR}"
+          id="$(./vt-cli/build/vt -k "${{ secrets.VtKey }}" scan file "${BUNDLE_TAR}" | xargs -n1 | tail -1 | strings)"
+          :> analysis.log
+          while ! grep -q 'status.*completed' analysis.log
+          do sleep 15 && ./vt-cli/build/vt -k "${{ secrets.VtKey }}" analysis "$id" > analysis.log
+          done
+          cat analysis.log
+          grep -q 'malicious: 0'  analysis.log
+          grep -q 'suspicious: 0' analysis.log
+
       - name: Upload package
         uses: actions/upload-artifact@master
         with:
