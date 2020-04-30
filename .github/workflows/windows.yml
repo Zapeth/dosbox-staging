@@ -4,57 +4,33 @@ on: [push, pull_request]
 
 jobs:
   build_clam:
-    name: Build ClamAV for Windows
+    name: AV Scan
     runs-on: windows-latest
     env:
       CHERE_INVOKING: yes
-      CLAM_INST_DIR:  "${{ github.workspace }}/local"
+      VT_CLI_DIR:  "${{ github.workspace }}/vt-cli"
     steps:
-      - uses:  actions/checkout@v2
-      - name:  Prepare Clam cache
-        id:    prep-clam
+      - name:  Prepare VT CLI cache
+        id:    prep-vt-cli
         shell: bash
         run: |
-          mkdir -p "${CLAM_INST_DIR}"
-          echo "::set-output name=dir::$CLAM_INST_DIR"
+          mkdir -p "${VT_CLI_DIR}"
+          echo "::set-output name=dir::$VT_CLI_DIR"
 
       - uses:  actions/cache@v1
-        id:    cache-clam
+        id:    cache-vt-cli
         with:
-          path: ${{ steps.prep-clam.outputs.dir }}
-          key: clam-0.102.2-test
+          path: ${{ steps.prep-vt-cli.outputs.dir }}
+          key: vt-cli-1
 
-      - name:  Install MSYS2
-        if:    steps.cache-clam.outputs.cache-hit != 'true'
-        run:   choco install msys2 --no-progress
-
-      - name:  Build, install, and test
-        if:    steps.cache-clam.outputs.cache-hit != 'true'
-        shell: python scripts\msys-bash.py {0}
+      - name:  Build
+        if:    steps.cache-vt-cli.outputs.cache-hit != 'true'
+        shell: bash
         run: |
-          ./scripts/list-build-dependencies.sh -m msys2 -c gcc | xargs pacman -S --noconfirm
-          pacman -S --noconfirm libcurl-devel git
-          PATH="/mingw64/bin:${PATH}"
-          ./contrib/clamav/build.sh
-          ldd ./local/bin/clamscan
-          ./local/bin/clamscan --heuristic-scan-precedence=yes --recursive --infected .
-
-      - name: Upload installation package
-        uses: actions/upload-artifact@v1
-        with:
-          name: local
-          path: local
-
-  use_clam:
-    name: Attempt to use ClamAV without MSYS2
-    needs: build_clam
-    runs-on: windows-latest
-    steps:
-      - name: Attempt to use ClamAV package
-        uses: actions/download-artifact@v1
-        with:
-          name: local
-      - shell: bash
-        run: |
-          ./local/bin/freshclam --help
-          ./local/bin/clamscan --help
+          set -x
+          git clone https://github.com/VirusTotal/vt-cli.git
+          cd vt-cli
+          VERSION="$(git describe)"
+          LDFLAGS="-X github.com/VirusTotal/vt-cli/cmd.Version=${VERSION}"
+          go build -ldflags "${LDFLAGS}" -o ./build/vt ./vt/main.go
+          ./build/vt --help
