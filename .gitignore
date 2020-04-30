@@ -89,3 +89,8 @@ suppress_base.json
 *.profraw.imports
 *.afdo
 *.afdo.imports
+
+# ClamAV build and install area
+/local/
+/contrib/clamav/clamav-devel/
+
