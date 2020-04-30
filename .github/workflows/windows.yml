@@ -3,16 +3,15 @@ name: Windows builds
 on: [push, pull_request]
 
 jobs:
-  build_clamav:
+  build_clam:
     name: Build ClamAV for Windows
     runs-on: windows-latest
     env:
-      CHERE_INVOKING:  yes
-      CLAM_INST_DIR:   "${{ github.workspace }}/local"
+      CHERE_INVOKING: yes
+      CLAM_INST_DIR:  "${{ github.workspace }}/local"
     steps:
       - uses:  actions/checkout@v2
-
-      - name:  Prepare ClamAV cache
+      - name:  Prepare Clam cache
         id:    prep-clam
         shell: bash
         run: |
@@ -23,7 +22,7 @@ jobs:
         id:    cache-clam
         with:
           path: ${{ steps.prep-clam.outputs.dir }}
-          key: clamav-0.102.2-test
+          key: clam-0.102.2-test
 
       - name:  Install MSYS2
         if:    steps.cache-clam.outputs.cache-hit != 'true'
@@ -34,14 +33,28 @@ jobs:
         shell: python scripts\msys-bash.py {0}
         run: |
           ./scripts/list-build-dependencies.sh -m msys2 -c gcc | xargs pacman -S --noconfirm
-          pacman -S --noconfirm libcurl-devel
+          pacman -S --noconfirm libcurl-devel git
+          PATH="/mingw64/bin:${PATH}"
           ./contrib/clamav/build.sh
           ldd ./local/bin/clamscan
           ./local/bin/clamscan --heuristic-scan-precedence=yes --recursive --infected .
-          tar -czvf local.tar.gz local
 
       - name: Upload installation package
         uses: actions/upload-artifact@v1
         with:
           name: local
-          path: local.tar.gz
+          path: local
+
+  use_clam:
+    name: Attempt to use ClamAV without MSYS2
+    needs: build_clam
+    runs-on: windows-latest
+    steps:
+      - name: Attempt to use ClamAV package
+        uses: actions/download-artifact@v1
+        with:
+          name: local
+      - shell: bash
+        run: |
+          ./local/bin/freshclam --help
+          ./local/bin/clamscan --help
