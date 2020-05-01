@@ -173,10 +173,12 @@ jobs:
       - name: Windows Defender AV Scan
         shell: powershell
         run: |
-          Get-MpComputerStatus
-          Invoke-WebRequest "https://secure.eicar.org/eicar.com" -OutFile "./dosbox-staging-windows-${{ env.VERSION }}/eicar.com" -Verbose
-          Start-MpScan -ScanPath "./dosbox-staging-windows-${{ env.VERSION }}" -Verbose -ErrorAction Stop
-          echo $?
+          $ErrorActionPreference = 'Stop'
+          $dosboxFile = "./dosbox-staging-windows-${{ env.VERSION }}/eicar.com"
+          Invoke-WebRequest "https://secure.eicar.org/eicar.com" -OutFile $dosboxFile -Verbose
+          # Not using Start-MpScan because it does not provide any useful output on status of scans
+          & 'C:\Program Files\Windows Defender\MpCmdRun.exe' -Scan -ScanType 3 -File $dosboxFile
+          if( $LASTEXITCODE -ne 0 ) { Throw "Exit $LASTEXITCODE : Windows Defender found an issue" }
 
       - name: Upload package
         uses: actions/upload-artifact@master
