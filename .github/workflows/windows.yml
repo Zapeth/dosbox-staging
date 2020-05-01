@@ -174,10 +174,9 @@ jobs:
         shell: powershell
         run: |
           $ErrorActionPreference = 'Stop'
-          $dosboxFile = "./dosbox-staging-windows-${{ env.VERSION }}/eicar.com"
-          Invoke-WebRequest "https://secure.eicar.org/eicar.com" -OutFile $dosboxFile -Verbose
+          $dosboxDir = "./dosbox-staging-windows-${{ env.VERSION }}"
           # Not using Start-MpScan because it does not provide any useful output on status of scans
-          & 'C:\Program Files\Windows Defender\MpCmdRun.exe' -Scan -ScanType 3 -File $dosboxFile
+          & 'C:\Program Files\Windows Defender\MpCmdRun.exe' -Scan -ScanType 3 -File $dosboxDir
           if( $LASTEXITCODE -ne 0 ) { Throw "Exit $LASTEXITCODE : Windows Defender found an issue" }
 
       - name: Upload package
